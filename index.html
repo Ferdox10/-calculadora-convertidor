@@ -24,8 +24,8 @@
             <!-- Campo de entrada para escritura manual -->
             <input type="text" id="manualInput" class="form-control mb-3" placeholder="Escribe tu operación aquí ✍️" onkeyup="evaluateInput(event)">
 
-            <!-- Botones de la calculadora básica -->
-            <div class="buttons basic-mode row g-2">
+            <!-- Botones de la calculadora (básico y científico en la misma sección) -->
+            <div class="buttons row g-2">
                 <button class="btn btn-secondary col-3" onclick="clearDisplay()">C</button>
                 <button class="btn btn-secondary col-3" onclick="undo()">↩️</button>
                 <button class="btn btn-secondary col-3" onclick="deleteLast()">←</button>
@@ -50,10 +50,8 @@
                 <button class="btn btn-light col-3" onclick="appendToDisplay('.')">.</button>
                 <button class="btn btn-light col-3" onclick="appendToDisplay('%')">%</button>
                 <button class="btn btn-success col-3" onclick="calculate()">=</button>
-            </div>
 
-            <!-- Botones de la calculadora científica (ahora incluye números) -->
-            <div class="buttons scientific-mode row g-2" style="display:none;">
+                <!-- Botones científicos -->
                 <button class="btn btn-light col-3" onclick="appendToDisplay('sin(')">sin</button>
                 <button class="btn btn-light col-3" onclick="appendToDisplay('cos(')">cos</button>
                 <button class="btn btn-light col-3" onclick="appendToDisplay('tan(')">tan</button>
@@ -65,21 +63,6 @@
                 <button class="btn btn-light col-3" onclick="appendToDisplay('(')">(</button>
 
                 <button class="btn btn-light col-3" onclick="appendToDisplay(')')">)</button>
-                <button class="btn btn-secondary col-3" onclick="clearDisplay()">C</button>
-                <button class="btn btn-secondary col-3" onclick="deleteLast()">←</button>
-                <button class="btn btn-success col-3" onclick="calculate()">=</button>
-
-                <!-- Incluimos los números en el modo científico -->
-                <button class="btn btn-light col-3" onclick="appendToDisplay('7')">7</button>
-                <button class="btn btn-light col-3" onclick="appendToDisplay('8')">8</button>
-                <button class="btn btn-light col-3" onclick="appendToDisplay('9')">9</button>
-                <button class="btn btn-light col-3" onclick="appendToDisplay('4')">4</button>
-                <button class="btn btn-light col-3" onclick="appendToDisplay('5')">5</button>
-                <button class="btn btn-light col-3" onclick="appendToDisplay('6')">6</button>
-                <button class="btn btn-light col-3" onclick="appendToDisplay('1')">1</button>
-                <button class="btn btn-light col-3" onclick="appendToDisplay('2')">2</button>
-                <button class="btn btn-light col-3" onclick="appendToDisplay('3')">3</button>
-                <button class="btn btn-light col-3" onclick="appendToDisplay('0')">0</button>
             </div>
         </div>
 
@@ -110,6 +93,7 @@
         <div class="photo-section my-5">
             <h3>Captura de Productos y Fórmulas 📸</h3>
             <input type="file" accept="image/*;capture=camera" id="capture" class="form-control mb-3" onchange="detectFormula()">
+            <button class="btn btn-success" onclick="processFormula()">Resolver Fórmula</button>
             <div id="photoGallery" class="row g-2"></div>
         </div>
     </div>
