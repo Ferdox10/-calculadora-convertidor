@@ -104,7 +104,6 @@
 
         function appendToDisplay(value) {
             const display = document.getElementById("display");
-            // Si el display es "0", limpiamos el display
             if (display.innerText === "0") {
                 display.innerText = value;
             } else {
@@ -143,10 +142,8 @@
             const maxFontSize = 2; // Tamaño máximo del texto
             const minFontSize = 0.5; // Tamaño mínimo del texto
 
-            // Cambia el tamaño del texto en función de la longitud del contenido
             const length = display.innerText.length;
             const newSize = Math.max(minFontSize, Math.min(maxFontSize, maxFontSize - (length / 20)));
-
             display.style.fontSize = newSize + "rem"; // Aplica el nuevo tamaño
         }
 
@@ -157,14 +154,18 @@
 
         function undo() {
             const display = document.getElementById("display");
-            display.innerText = display.innerText.slice(0, -1) || "0"; // Elimina el último carácter
+            display.innerText = display.innerText.slice(0, -1) || "0"; // Deshace el último carácter
             adjustDisplayFontSize(); // Ajusta el tamaño del texto
         }
 
         function deleteLast() {
             const display = document.getElementById("display");
-            const value = display.innerText;
-            display.innerText = value.slice(0, -1); // Borra el último carácter
+            const currentText = display.innerText;
+            if (currentText.length > 1) {
+                display.innerText = currentText.slice(0, -1); // Elimina el último carácter
+            } else {
+                display.innerText = "0"; // Si no hay más caracteres, muestra 0
+            }
             adjustDisplayFontSize(); // Ajusta el tamaño del texto
         }
 
@@ -173,18 +174,53 @@
             updateHistory(); // Actualiza la interfaz
         }
 
-        // Aquí puedes añadir funciones para el conversor de moneda y la detección de fórmulas
-        function convertCurrency() {
-            // Lógica para el conversor de moneda
+        function toggleMode() {
+            const calculator = document.querySelector(".calculator");
+            calculator.classList.toggle("scientific"); // Alterna el modo científico
         }
 
-        function detectFormula() {
-            // Lógica para la detección de fórmula
+        // Función para cargar las monedas
+        async function loadCurrencies() {
+            const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD'); // Obtiene la lista de monedas
+            const data = await response.json();
+            const currencies = Object.keys(data.rates); // Obtiene las monedas
+            const fromCurrencySelect = document.getElementById("fromCurrency");
+            const toCurrencySelect = document.getElementById("toCurrency");
+
+            currencies.forEach(currency => {
+                const optionFrom = document.createElement("option");
+                optionFrom.value = currency;
+                optionFrom.innerText = currency;
+                fromCurrencySelect.appendChild(optionFrom); // Añade las opciones para el select
+
+                const optionTo = document.createElement("option");
+                optionTo.value = currency;
+                optionTo.innerText = currency;
+                toCurrencySelect.appendChild(optionTo); // Añade las opciones para el select
+            });
         }
 
-        function processFormula() {
-            // Lógica para procesar la fórmula
+        // Función para convertir la moneda
+        async function convertCurrency() {
+            const amount = parseFloat(document.getElementById("amount").value);
+            const fromCurrency = document.getElementById("fromCurrency").value;
+            const toCurrency = document.getElementById("toCurrency").value;
+
+            if (!amount || isNaN(amount)) {
+                document.getElementById("conversionResult").innerText = "Por favor, ingresa un monto válido.";
+                return; // Valida que el monto sea correcto
+            }
+
+            const response = await fetch(`https://api.exchangerate-api.com/v4/latest/${fromCurrency}`); // Obtiene el tipo de cambio
+            const data = await response.json();
+            const rate = data.rates[toCurrency]; // Obtiene la tasa de cambio
+            const convertedAmount = (amount * rate).toFixed(2); // Convierte el monto
+
+            document.getElementById("conversionResult").innerText = `${amount} ${fromCurrency} = ${convertedAmount} ${toCurrency}`; // Muestra el resultado
         }
+
+        loadCurrencies(); // Carga las monedas al inicio
     </script>
+
 </body>
 </html>
