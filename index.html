@@ -48,12 +48,11 @@
 
                 <button class="btn btn-light col-6" onclick="appendToDisplay('0')">0</button>
                 <button class="btn btn-light col-3" onclick="appendToDisplay('.')">.</button>
-                <!-- Botón de porcentaje restaurado -->
                 <button class="btn btn-light col-3" onclick="appendToDisplay('%')">%</button>
                 <button class="btn btn-success col-3" onclick="calculate()">=</button>
             </div>
 
-            <!-- Botones de la calculadora científica -->
+            <!-- Botones de la calculadora científica (ahora incluye números) -->
             <div class="buttons scientific-mode row g-2" style="display:none;">
                 <button class="btn btn-light col-3" onclick="appendToDisplay('sin(')">sin</button>
                 <button class="btn btn-light col-3" onclick="appendToDisplay('cos(')">cos</button>
@@ -69,6 +68,18 @@
                 <button class="btn btn-secondary col-3" onclick="clearDisplay()">C</button>
                 <button class="btn btn-secondary col-3" onclick="deleteLast()">←</button>
                 <button class="btn btn-success col-3" onclick="calculate()">=</button>
+
+                <!-- Incluimos los números en el modo científico -->
+                <button class="btn btn-light col-3" onclick="appendToDisplay('7')">7</button>
+                <button class="btn btn-light col-3" onclick="appendToDisplay('8')">8</button>
+                <button class="btn btn-light col-3" onclick="appendToDisplay('9')">9</button>
+                <button class="btn btn-light col-3" onclick="appendToDisplay('4')">4</button>
+                <button class="btn btn-light col-3" onclick="appendToDisplay('5')">5</button>
+                <button class="btn btn-light col-3" onclick="appendToDisplay('6')">6</button>
+                <button class="btn btn-light col-3" onclick="appendToDisplay('1')">1</button>
+                <button class="btn btn-light col-3" onclick="appendToDisplay('2')">2</button>
+                <button class="btn btn-light col-3" onclick="appendToDisplay('3')">3</button>
+                <button class="btn btn-light col-3" onclick="appendToDisplay('0')">0</button>
             </div>
         </div>
 
@@ -98,8 +109,7 @@
         <!-- Sección para capturar imágenes y detectar fórmulas -->
         <div class="photo-section my-5">
             <h3>Captura de Productos y Fórmulas 📸</h3>
-            <!-- Opción de sacar fotos restaurada -->
-            <input type="file" accept="image/*;capture=camera" id="capture" class="form-control mb-3" onchange="addPhoto()">
+            <input type="file" accept="image/*;capture=camera" id="capture" class="form-control mb-3" onchange="detectFormula()">
             <div id="photoGallery" class="row g-2"></div>
         </div>
     </div>
