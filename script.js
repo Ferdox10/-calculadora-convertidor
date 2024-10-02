@@ -1,168 +1,125 @@
-let displayValue = '0';
-let previousValue = ''; // Guardar el estado anterior para undo
-let history = [];
+const display = document.getElementById("display");
+const historyList = document.getElementById("historyList");
 
-// API Key
-const apiKey = '42002ed6d1f437d95a5243fa20b940a0';
-
-document.addEventListener("DOMContentLoaded", () => {
-    loadCurrencyOptions();
-});
-
-// Cambia entre la calculadora básica y científica
-function toggleMode() {
-    const basicMode = document.querySelector('.basic-mode');
-    const scientificMode = document.querySelector('.scientific-mode');
-    const button = document.querySelector('button.btn-primary');
-
-    if (basicMode.style.display === 'none') {
-        basicMode.style.display = 'block';
-        scientificMode.style.display = 'none';
-        button.innerText = 'Modo Científico 🧑‍🔬';
+// Ajuste de tamaño de texto en el display
+function adjustDisplayFontSize() {
+    if (display.innerText.length > 15) {
+        display.style.fontSize = "1.5rem"; // Tamaño más pequeño si hay muchos caracteres
     } else {
-        basicMode.style.display = 'none';
-        scientificMode.style.display = 'block';
-        button.innerText = 'Modo Básico 🔧';
+        display.style.fontSize = "2rem"; // Tamaño normal
     }
 }
 
-// Captura la entrada manual y evalúa
+function appendToDisplay(value) {
+    if (display.innerText === "0") {
+        display.innerText = "";
+    }
+    display.innerText += value;
+    adjustDisplayFontSize(); // Ajustar el tamaño de texto
+}
+
+function clearDisplay() {
+    display.innerText = "0";
+    display.style.fontSize = "2rem"; // Resetear tamaño
+}
+
+function deleteLast() {
+    display.innerText = display.innerText.slice(0, -1) || "0";
+    adjustDisplayFontSize(); // Ajustar el tamaño de texto
+}
+
+function undo() {
+    clearDisplay();
+    if (historyList.childElementCount > 0) {
+        const lastEntry = historyList.lastElementChild.innerText;
+        display.innerText = lastEntry;
+        historyList.removeChild(historyList.lastElementChild);
+    }
+}
+
+function calculate() {
+    try {
+        const result = eval(display.innerText);
+        display.innerText = result;
+        addToHistory(display.innerText);
+    } catch (error) {
+        display.innerText = "Error";
+    }
+}
+
+function addToHistory(entry) {
+    const li = document.createElement("li");
+    li.className = "list-group-item";
+    li.innerText = entry;
+    historyList.appendChild(li);
+}
+
+function clearHistory() {
+    historyList.innerHTML = "";
+}
+
 function evaluateInput(event) {
-    if (event.key === 'Enter') {
+    if (event.key === "Enter") {
         calculate();
     }
 }
 
-// Actualiza la pantalla
-function updateDisplay(value) {
-    const display = document.getElementById('display');
-    display.innerText = value;
-}
+// Conversor de moneda
+const currencyData = {
+    "USD": 1,
+    "EUR": 0.85,
+    "JPY": 110,
+    "GBP": 0.75
+};
 
-// Agrega valor al display
-function appendToDisplay(value) {
-    if (displayValue === '0' && !isNaN(value)) {
-        displayValue = value;
-    } else {
-        displayValue += value;
-    }
-    updateDisplay(displayValue);
-}
-
-// Calcula el resultado
-function calculate() {
-    try {
-        // Guardar en historial
-        history.push(displayValue);
-        const result = eval(displayValue);
-        updateDisplay(result);
-        displayValue = result.toString(); // Convertir a string para la siguiente operación
-    } catch (error) {
-        alert('Error en la operación');
+function populateCurrencySelect() {
+    const fromCurrencySelect = document.getElementById("fromCurrency");
+    const toCurrencySelect = document.getElementById("toCurrency");
+    for (const currency in currencyData) {
+        const optionFrom = document.createElement("option");
+        optionFrom.value = currency;
+        optionFrom.textContent = currency;
+        fromCurrencySelect.appendChild(optionFrom);
+        
+        const optionTo = document.createElement("option");
+        optionTo.value = currency;
+        optionTo.textContent = currency;
+        toCurrencySelect.appendChild(optionTo);
     }
 }
 
-// Limpia la pantalla
-function clearDisplay() {
-    displayValue = '0';
-    updateDisplay(displayValue);
-}
-
-// Deshacer la última operación
-function undo() {
-    if (history.length > 0) {
-        displayValue = history.pop();
-        updateDisplay(displayValue);
-    } else {
-        clearDisplay();
-    }
-}
-
-// Borra el último carácter
-function deleteLast() {
-    displayValue = displayValue.slice(0, -1) || '0';
-    updateDisplay(displayValue);
-}
-
-// Carga las opciones de divisas
-function loadCurrencyOptions() {
-    fetch(`https://api.exchangerate-api.com/v4/latest/USD`)
-        .then(response => response.json())
-        .then(data => {
-            const fromCurrency = document.getElementById('fromCurrency');
-            const toCurrency = document.getElementById('toCurrency');
-
-            // Llenar el select con las opciones
-            for (const currency in data.rates) {
-                const optionFrom = document.createElement('option');
-                optionFrom.value = currency;
-                optionFrom.innerText = currency;
-                fromCurrency.appendChild(optionFrom);
-
-                const optionTo = document.createElement('option');
-                optionTo.value = currency;
-                optionTo.innerText = currency;
-                toCurrency.appendChild(optionTo);
-            }
-        })
-        .catch(error => console.error('Error al cargar las monedas:', error));
-}
-
-// Convierte divisas
 function convertCurrency() {
-    const amount = document.getElementById('amount').value;
-    const fromCurrency = document.getElementById('fromCurrency').value;
-    const toCurrency = document.getElementById('toCurrency').value;
-
-    fetch(`https://api.exchangerate-api.com/v4/latest/${fromCurrency}`)
-        .then(response => response.json())
-        .then(data => {
-            const rate = data.rates[toCurrency];
-            const result = (amount * rate).toFixed(2);
-            document.getElementById('conversionResult').innerText = `${amount} ${fromCurrency} = ${result} ${toCurrency}`;
-        })
-        .catch(error => console.error('Error al convertir moneda:', error));
-}
-
-// Borra el historial
-function clearHistory() {
-    history = [];
-    document.getElementById('historyList').innerHTML = '';
-}
-
-// Muestra el historial
-function showHistory() {
-    const historyList = document.getElementById('historyList');
-    historyList.innerHTML = ''; // Limpiar el historial actual
-    history.forEach(item => {
-        const li = document.createElement('li');
-        li.className = 'list-group-item';
-        li.innerText = item;
-        historyList.appendChild(li);
-    });
-}
-
-// Detecta la fórmula de una imagen
-function detectFormula() {
-    const input = document.getElementById('capture');
-    const file = input.files[0];
-
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const img = new Image();
-            img.src = event.target.result;
-
-            // Mostrar imagen en la galería
-            const gallery = document.getElementById('photoGallery');
-            const imgElement = document.createElement('img');
-            imgElement.src = img.src;
-            imgElement.className = 'col-4 mb-2';
-            gallery.appendChild(imgElement);
-
-            // Aquí podrías implementar la lógica para detectar fórmulas
-            // pero para simplicidad no se incluye en este momento
-        };
-        reader.readAsDataURL(file);
+    const amount = document.getElementById("amount").value;
+    const fromCurrency = document.getElementById("fromCurrency").value;
+    const toCurrency = document.getElementById("toCurrency").value;
+    if (amount) {
+        const result = (amount / currencyData[fromCurrency]) * currencyData[toCurrency];
+        document.getElementById("conversionResult").innerText = `${amount} ${fromCurrency} = ${result.toFixed(2)} ${toCurrency}`;
+    } else {
+        document.getElementById("conversionResult").innerText = "Por favor, ingrese un monto.";
     }
+}
+
+populateCurrencySelect();
+
+// Sección de captura de productos y fórmulas
+function detectFormula() {
+    const input = document.getElementById("capture");
+    const file = input.files[0];
+    if (file) {
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        img.classList.add("img-thumbnail", "col-4", "my-2");
+        document.getElementById("photoGallery").appendChild(img);
+    }
+}
+
+function processFormula() {
+    const formula = display.innerText; // Aquí puedes incluir el manejo para resolver la fórmula
+    alert(`Resolviendo la fórmula: ${formula}`);
+}
+
+// Función para cambiar entre modos
+function toggleMode() {
+    // Implementa la lógica para cambiar entre el modo normal y el modo científico
 }
