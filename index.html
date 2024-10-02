@@ -32,10 +32,6 @@
         <div class="calculator bg-white p-4 rounded shadow-sm mx-auto" style="max-width: 350px; display: none;">
             <h2 class="text-center">Calculadora Moderna 🧮</h2>
 
-            <div class="text-center my-3">
-                <button class="btn btn-primary" onclick="toggleMode()">Modo Científico 🧑‍🔬</button>
-            </div>
-
             <div id="display" class="display text-end mb-3 p-2 bg-dark text-white rounded">0</div>
 
             <input type="text" id="manualInput" class="form-control mb-3" placeholder="Escribe tu operación aquí ✍️" onkeyup="evaluateInput(event)">
@@ -65,18 +61,6 @@
                 <button class="btn btn-light col-3" onclick="appendToDisplay('.')">.</button>
                 <button class="btn btn-light col-3" onclick="appendToDisplay('%')">%</button>
                 <button class="btn btn-success col-3" onclick="calculate()">=</button>
-
-                <button class="btn btn-light col-3" onclick="appendToDisplay('sin(')">sin</button>
-                <button class="btn btn-light col-3" onclick="appendToDisplay('cos(')">cos</button>
-                <button class="btn btn-light col-3" onclick="appendToDisplay('tan(')">tan</button>
-                <button class="btn btn-light col-3" onclick="appendToDisplay('sqrt(')">√</button>
-
-                <button class="btn btn-light col-3" onclick="appendToDisplay('log(')">log</button>
-                <button class="btn btn-light col-3" onclick="appendToDisplay('pow(')">^</button>
-                <button class="btn btn-light col-3" onclick="appendToDisplay('exp(')">exp</button>
-                <button class="btn btn-light col-3" onclick="appendToDisplay('(')">(</button>
-
-                <button class="btn btn-light col-3" onclick="appendToDisplay(')')">)</button>
             </div>
         </div>
 
@@ -112,7 +96,53 @@
 
     <script>
         let historyList = []; // Almacena el historial de operaciones
+        let currencyList = {}; // Almacena la lista de divisas y sus países
 
+        // Función para cargar las divisas desde la API
+        async function loadCurrencies() {
+            const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD'); // Usar API gratuita
+            const data = await response.json();
+            currencyList = data.rates;
+            populateCurrencySelectors();
+        }
+
+        function populateCurrencySelectors() {
+            const fromCurrencySelect = document.getElementById('fromCurrency');
+            const toCurrencySelect = document.getElementById('toCurrency');
+
+            fromCurrencySelect.innerHTML = '';
+            toCurrencySelect.innerHTML = '';
+
+            // Añadir una opción por cada divisa
+            for (const [currencyCode, rate] of Object.entries(currencyList)) {
+                const option = document.createElement('option');
+                option.value = currencyCode;
+                option.innerText = `${currencyCode} - ${getCountryName(currencyCode)}`; // Muestra el país
+                fromCurrencySelect.appendChild(option);
+                const option2 = option.cloneNode(true);
+                toCurrencySelect.appendChild(option2);
+            }
+        }
+
+        // Función para obtener el nombre del país por código de divisa
+        function getCountryName(currencyCode) {
+            const countryNames = {
+                'USD': 'Estados Unidos',
+                'EUR': 'Eurozona',
+                'GBP': 'Reino Unido',
+                'JPY': 'Japón',
+                'CAD': 'Canadá',
+                'AUD': 'Australia',
+                'CHF': 'Suiza',
+                'CNY': 'China',
+                'SEK': 'Suecia',
+                'NZD': 'Nueva Zelanda',
+                // Añadir más divisas y sus países según sea necesario
+            };
+            return countryNames[currencyCode] || 'Desconocido';
+        }
+
+        // Lógica de la calculadora
         function appendToDisplay(value) {
             const display = document.getElementById("display");
             if (display.innerText === "0") {
@@ -139,98 +169,97 @@
 
         function updateHistory() {
             const historyListElement = document.getElementById("historyList");
-            historyListElement.innerHTML = ""; // Limpia la lista antes de actualizar
-            historyList.forEach(entry => {
-                const li = document.createElement("li");
-                li.classList.add("list-group-item");
-                li.innerText = entry; // Muestra cada entrada del historial
+            historyListElement.innerHTML = '';
+            historyList.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.textContent = item;
                 historyListElement.appendChild(li);
             });
         }
 
-        function adjustDisplayFontSize() {
-            const display = document.getElementById("display");
-            const maxFontSize = 2; // Tamaño máximo del texto
-            const minFontSize = 0.5; // Tamaño mínimo del texto
-
-            const length = display.innerText.length;
-            const newSize = Math.max(minFontSize, Math.min(maxFontSize, maxFontSize - (length / 20)));
-            display.style.fontSize = newSize + 'rem'; // Ajusta el tamaño del texto
+        function clearHistory() {
+            historyList = []; // Reinicia el historial
+            updateHistory(); // Actualiza la interfaz
         }
 
         function clearDisplay() {
-            document.getElementById("display").innerText = "0"; // Limpia el display
-            adjustDisplayFontSize(); // Ajusta el tamaño del texto
+            document.getElementById("display").innerText = "0"; // Limpia la pantalla
         }
 
         function undo() {
             const display = document.getElementById("display");
-            display.innerText = display.innerText.slice(0, -1) || "0"; // Elimina el último carácter
+            if (display.innerText.length > 1) {
+                display.innerText = display.innerText.slice(0, -1); // Elimina el último carácter
+            } else {
+                clearDisplay(); // Limpia si solo queda un carácter
+            }
             adjustDisplayFontSize(); // Ajusta el tamaño del texto
         }
 
         function deleteLast() {
             const display = document.getElementById("display");
             display.innerText = display.innerText.slice(0, -1); // Elimina el último carácter
+            if (display.innerText === "") {
+                display.innerText = "0"; // Resetea a cero si está vacío
+            }
             adjustDisplayFontSize(); // Ajusta el tamaño del texto
+        }
+
+        function evaluateInput(event) {
+            if (event.key === 'Enter') {
+                calculate(); // Evalúa la operación al presionar Enter
+            }
         }
 
         function toggleCalculator() {
             const calculator = document.querySelector('.calculator');
             calculator.style.display = calculator.style.display === 'none' ? 'block' : 'none'; // Alterna la visibilidad de la calculadora
+            loadCurrencies(); // Carga las divisas al mostrar la calculadora
         }
 
-        function convertCurrency() {
-            const amount = document.getElementById("amount").value;
-            const fromCurrency = document.getElementById("fromCurrency").value;
-            const toCurrency = document.getElementById("toCurrency").value;
+        // Conversión de divisas
+        async function convertCurrency() {
+            const amount = parseFloat(document.getElementById('amount').value);
+            const fromCurrency = document.getElementById('fromCurrency').value;
+            const toCurrency = document.getElementById('toCurrency').value;
 
-            if (!amount || !fromCurrency || !toCurrency) {
-                alert("Por favor, ingrese un monto y seleccione las monedas."); // Verifica la entrada
+            if (!amount || isNaN(amount)) {
+                alert("Por favor, ingresa un monto válido.");
                 return;
             }
 
-            // Aquí se puede incluir la lógica para la conversión de divisas
-            const conversionRate = 1; // Asumir una tasa de conversión de ejemplo
-            const result = amount * conversionRate; // Realiza la conversión
-            document.getElementById("conversionResult").innerText = `Resultado: ${result} ${toCurrency}`; // Muestra el resultado
+            const rateFrom = currencyList[fromCurrency];
+            const rateTo = currencyList[toCurrency];
+            const convertedAmount = (amount * rateTo) / rateFrom;
+
+            document.getElementById('conversionResult').innerText = 
+                `${amount} ${fromCurrency} es igual a ${convertedAmount.toFixed(2)} ${toCurrency}.`;
         }
 
-        function clearHistory() {
-            historyList = []; // Limpia el historial
-            updateHistory(); // Actualiza el historial en la interfaz
-        }
+        // Inicializa la aplicación
+        window.onload = function() {
+            loadCurrencies(); // Carga las divisas al iniciar la página
+        };
 
-        function detectFormula() {
-            const input = document.getElementById('capture');
-            const file = input.files[0]; // Obtiene la imagen cargada
-            if (file) {
-                const img = document.createElement('img');
-                img.src = URL.createObjectURL(file); // Crea una URL para la imagen
-                img.className = 'img-thumbnail col-4'; // Estilo para la imagen
-                document.getElementById('photoGallery').appendChild(img); // Agrega la imagen a la galería
+        // Ajustar el tamaño de la fuente del display
+        function adjustDisplayFontSize() {
+            const display = document.getElementById("display");
+            if (display.innerText.length > 10) {
+                display.style.fontSize = "1rem"; // Reduce el tamaño del texto
+            } else {
+                display.style.fontSize = "2rem"; // Tamaño normal
             }
         }
 
-        function processFormula() {
-            // Aquí puedes implementar la lógica para procesar y resolver la fórmula de la imagen
-            alert("Función de resolución de fórmulas aún no implementada.");
+        // Detecta y procesa la fórmula de la imagen (placeholder)
+        function detectFormula() {
+            alert("Función de detección de fórmulas aún no implementada.");
         }
 
-        // Llenar las opciones de monedas (ejemplo)
-        const currencyOptions = ["USD", "EUR", "GBP", "JPY", "COP"]; // Ejemplo de monedas
-        const fromCurrencySelect = document.getElementById("fromCurrency");
-        const toCurrencySelect = document.getElementById("toCurrency");
-        currencyOptions.forEach(currency => {
-            const option1 = document.createElement("option");
-            option1.value = currency;
-            option1.text = currency;
-            fromCurrencySelect.appendChild(option1);
-            const option2 = document.createElement("option");
-            option2.value = currency;
-            option2.text = currency;
-            toCurrencySelect.appendChild(option2);
-        });
+        function processFormula() {
+            alert("Función de resolución de fórmulas aún no implementada.");
+        }
     </script>
 </body>
 </html>
